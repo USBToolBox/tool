@@ -553,10 +553,10 @@ class BaseUSBMap:
 
             else:
                 personality = {
-                    "CFBundleIdentifier": "tk.dhinakg.PortRemover",
-                    "IOClass": "PortRemover",
+                    "CFBundleIdentifier": "com.dhinakg.USBToolBox.kext",
+                    "IOClass": "USBToolBox",
                     "IOProviderClass": "IOPCIDevice",
-                    "IOMatchCategory": "PortRemover",
+                    "IOMatchCategory": "USBToolBox",
                 } | self.choose_matching_key(
                     controller
                 )  # type: ignore
@@ -597,7 +597,7 @@ class BaseUSBMap:
             template["IOKitPersonalities"][personality_name] = personality
 
         if not self.settings["use_native"]:
-            template["OSBundleLibraries"] = {"tk.dhinakg.PortRemover": "1.0.1d1"}
+            template["OSBundleLibraries"] = {"com.dhinakg.USBToolBox.kext": "1.0.0"}
 
         write_path = Path("UTBMap.kext")
 

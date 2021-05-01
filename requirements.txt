@@ -1,0 +1,12 @@
+# Base requirements
+ansiescapes @ git+https://github.com/embedded-dev/ansiescapes.git
+termcolor2
+
+# Windows requirements
+wmi; platform_system == "Windows"
+
+# macOS requirements
+pyobjc; platform_system == "Darwin"
+
+# Debugging
+# debugpy

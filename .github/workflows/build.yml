@@ -1,0 +1,89 @@
+name: Build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  release:
+    types: [published]
+jobs:
+  macOS:
+    name: Build macOS
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      # - name: Set up Python 3
+      #   run: brew install python3 python-tk
+
+      - name: Install Python Dependencies
+        run: pip3 install -r requirements.txt
+
+      - name: Install Debug Dependencies
+        run: pip3 install pyinstaller
+      - name: Build for macOS
+        run: pyinstaller spec/macOS.spec
+
+      - name: Zip
+        run: cd dist; zip macOS.zip macOS
+      - name: Upload to Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Artifacts macOS
+          path: dist/macOS.zip
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/macOS.zip
+          tag: ${{ github.ref }}
+          file_glob: true
+
+  windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Install Python Dependencies
+        run: pip3 install -r requirements.txt
+
+      - name: Install Debug Dependencies
+        run: pip3 install pyinstaller
+
+      - name: Build for Windows
+        run: pyinstaller spec\Windows.spec && pyinstaller spec\Windows_dir.spec && pyinstaller spec\debug_dump.spec
+
+      - uses: papeloto/action-zip@v1
+        with:
+          files: dist/Windows/
+          recursive: false
+          dest: dist/Windows.zip
+
+      - name: Upload to Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Artifacts Windows
+          path: |
+            dist/*.exe
+            dist/Windows.zip
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/*.exe
+          tag: ${{ github.ref }}
+          file_glob: true
+      - name: Upload to Release 2
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/Windows.zip
+          tag: ${{ github.ref }}
+          file_glob: true

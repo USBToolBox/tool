@@ -111,7 +111,7 @@ def time_it(func: Callable, text: str, *args, **kwargs):
 
 
 def debug(str):
-    if True:
+    if False:
         input(f"DEBUG: {str}\nPress enter to continue")
 
 

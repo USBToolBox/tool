@@ -56,7 +56,7 @@ class macOSUSBMap(BaseUSBMap):
         elif "AppleUSBUHCI" in inheritance:
             return shared.USBControllerTypes.UHCI
         else:
-            shared.debug(f"Unknown controller type for class code {read_property(parent_props['class-code'], 2)}, inheritance {inheritance}!")
+            shared.debug(f"Unknown controller type for class code {read_property(parent_props['class-code'], 2) if 'class-code' in parent_props else 'none'}, inheritance {inheritance}!")
             return shared.USBControllerTypes.Unknown
 
     def get_controllers(self):

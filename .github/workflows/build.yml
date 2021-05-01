@@ -8,11 +8,11 @@ on:
 jobs:
   macOS:
     name: Build macOS
-    runs-on: self-hosted
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      # - name: Set up Python 3
-      #   run: brew install python3 python-tk
+      - name: Set up Python 3
+        run: brew install python3
 
       - name: Install Python Dependencies
         run: pip3 install -r requirements.txt

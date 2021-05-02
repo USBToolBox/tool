@@ -443,7 +443,7 @@ class BaseUSBMap:
             for port in controller["ports"]:
                 if not port["selected"]:
                     continue
-                if not port["type"] and not port["guessed"]:
+                if port["type"] is None and port["guessed"] is None:
                     errors.append(f"Port {port['selection_index']} is missing a connector type!")
 
         return self.print_errors(errors)

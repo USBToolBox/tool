@@ -88,6 +88,9 @@ class WindowsUSBMap(BaseUSBMap):
         if interface:
             return shared.USBControllerTypes(interface)
         service = self.get_property_from_wmi(controller["identifiers"]["instance_id"], PnpDeviceProperties.SERVICE)
+        if not isinstance(service, str):
+            shared.debug(f"Unknown controller type for interface {interface} and service {service}!")
+            return shared.USBControllerTypes.Unknown
         if service.lower() == "usbxhci":
             return shared.USBControllerTypes.XHCI
         elif service.lower() == "usbehci":

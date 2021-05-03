@@ -47,13 +47,15 @@ start = time.time()
 for e in c.Win32_USBController():
     controller = build_dict(e.PNPDeviceID)
     all_devices[e.PNPDeviceID] = dict(controller)
-    controller["root_hub"] = build_dict(controller[PnpDeviceProperties.BUS_RELATIONS.value][0])
-    all_devices[controller[PnpDeviceProperties.BUS_RELATIONS.value][0]] = dict(controller["root_hub"])
-    controller["root_hub"]["devices"] = {}
 
-    for f in controller["root_hub"].get(PnpDeviceProperties.BUS_RELATIONS.value, []):
-        controller["root_hub"]["devices"][f] = build_dict(f)
-        all_devices[f] = dict(controller["root_hub"]["devices"][f])
+    if controller.get(PnpDeviceProperties.BUS_RELATIONS.value, None):
+        controller["root_hub"] = build_dict(controller[PnpDeviceProperties.BUS_RELATIONS.value][0])
+        all_devices[controller[PnpDeviceProperties.BUS_RELATIONS.value][0]] = dict(controller["root_hub"])
+        controller["root_hub"]["devices"] = {}
+
+        for f in controller["root_hub"].get(PnpDeviceProperties.BUS_RELATIONS.value, []):
+            controller["root_hub"]["devices"][f] = build_dict(f)
+            all_devices[f] = dict(controller["root_hub"]["devices"][f])
 
     controllers.append(controller)
 end = time.time()

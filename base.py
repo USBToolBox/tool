@@ -15,7 +15,7 @@ from termcolor2 import c as color
 
 from Scripts import shared, utils
 
-CURRENT_VERSION = "0.0.4"
+CURRENT_VERSION = "0.0.5"
 
 
 class Colors(Enum):

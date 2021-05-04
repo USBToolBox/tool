@@ -59,3 +59,7 @@ There are 3 connector types for USB Type C connectors: Type C - USB 2 only, Type
 ## Internal
 
 Connector type 255. Used for any internal devices, like card readers, fingerprint scanners, webcams, etc.
+
+## Picture Credits
+
+Pictures sourced from [Wikipedia](https://en.wikipedia.org/wiki/USB_hardware). All credit goes to the authors.

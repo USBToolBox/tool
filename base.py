@@ -5,7 +5,6 @@ import platform
 import plistlib
 import shutil
 import subprocess
-import sys
 import textwrap
 from enum import Enum
 from operator import itemgetter
@@ -15,7 +14,7 @@ from termcolor2 import c as color
 
 from Scripts import shared, utils
 
-CURRENT_VERSION = "0.0.6"
+CURRENT_VERSION = "0.0.7"
 
 
 class Colors(Enum):
@@ -40,9 +39,8 @@ class BaseUSBMap:
     def __init__(self):
         self.utils = utils.Utils(f"USBToolBox {CURRENT_VERSION}".strip())
         self.controllers = None
-        self.json_path = Path("usb.json")
-        self.settings_path = Path("settings.json")
-        # self.json_path = Path(type(self).__name__ + ".json")
+        self.json_path = shared.current_dir / Path("usb.json")
+        self.settings_path = shared.current_dir / Path("settings.json")
 
         self.settings = (
             json.load(self.settings_path.open()) if self.settings_path.exists() else {"show_friendly_types": False, "use_native": False, "add_comments_to_map": True, "auto_bind_companions": True}
@@ -164,7 +162,7 @@ class BaseUSBMap:
         raise NotImplementedError
 
     def controller_to_str(self, controller):
-        return f"{color(controller['name']).bold} | {shared.USBControllerTypes(controller['class'])}"
+        return f"{controller['name']} | {shared.USBControllerTypes(controller['class'])}"
 
     def port_to_str(self, port):
         if port["type"] is not None:
@@ -176,14 +174,28 @@ class BaseUSBMap:
 
         return f"{port['name']} | {shared.USBDeviceSpeeds(port['class'])} | " + (str(port_type) if self.settings["show_friendly_types"] else f"Type {port_type}")
 
-    def print_controllers(self, controllers):
+    def print_controllers(self, controllers, colored=False):
         if not controllers:
             print("Empty.")
             return
         for controller in controllers:
-            print(self.controller_to_str(controller) + f" | {len(controller['ports'])} ports")
+            if colored:
+                print(color(self.controller_to_str(controller) + f" | {len(controller['ports'])} ports"))
+            else:
+                print(self.controller_to_str(controller) + f" | {len(controller['ports'])} ports")
             for port in controller["ports"]:
-                print("  " + self.port_to_str(port))
+                if not colored:
+                    print("  " + self.port_to_str(port))
+                elif port["devices"]:
+                    print("  " + color(self.port_to_str(port)).cyan.bold)
+                elif (
+                    self.get_controller_from_list(controller, self.controllers_historical)
+                    and [i for i in self.get_controller_from_list(controller, self.controllers_historical)["ports"] if i["index"] == port["index"]][0]["devices"]
+                ):
+                    print("  " + color(self.port_to_str(port)).green.bold)
+                else:
+                    print("  " + self.port_to_str(port))
+
                 if port["comment"]:
                     print("  " + port["comment"])
                 for device in port["devices"]:
@@ -217,10 +229,9 @@ class BaseUSBMap:
                 dont_refresh = False
             else:
                 self.update_devices()
-            # print("\nCURRENT\n")
-            self.print_controllers(self.controllers)
-            # print("\nHISTORICAL\n")
-            # self.print_controllers(self.controllers_historical)
+
+            self.print_controllers(self.controllers, colored=True)
+
             self.dump_historical()
             print("\nB.  Back\n")
             do_quit = self.utils.grab("Waiting 5 seconds: ", timeout=5)
@@ -276,7 +287,7 @@ class BaseUSBMap:
 
     def select_ports(self):
         if not self.controllers_historical:
-            utils.TUIMenu("Select Ports", "Select an option: ", in_between=["No ports! Use the discovery mode."], loop=True).start()
+            utils.TUIMenu("Select Ports and Build Kext", "Select an option: ", in_between=["No ports! Use the discovery mode."], loop=True).start()
             return
 
         selection_index = 1
@@ -297,7 +308,7 @@ class BaseUSBMap:
             for controller in self.controllers_historical:
                 controller["selected_count"] = sum(1 if port["selected"] else 0 for port in controller["ports"])
 
-            utils.header("Select Ports")
+            utils.header("Select Ports and Build Kext")
             print()
             for controller in self.controllers_historical:
                 port_count_str = f"{controller['selected_count']}/{len(controller['ports'])}"
@@ -320,7 +331,7 @@ class BaseUSBMap:
             print(
                 textwrap.dedent(
                     """\
-                K. Build USBMap.kext
+                K. Build UTBMap.kext
                 A. Select All
                 N. Select None
                 P. Enable All Populated Ports
@@ -519,12 +530,7 @@ class BaseUSBMap:
 
         ignore = response == "I"
 
-        template = Path("resources/Info.plist")
-
-        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-            template = Path(sys._MEIPASS) / template  # type: ignore # pylint: disable=no-member,protected-access
-
-        template = plistlib.load(template.open("rb"))
+        template = plistlib.load((shared.resource_dir / Path("Info.plist")).open("rb"))
 
         menu = utils.TUIMenu("Building USBMap", "Select an option: ")
         menu.head()
@@ -535,8 +541,10 @@ class BaseUSBMap:
 
             # FIXME: ensure unique
             if controller["identifiers"].get("acpi_path"):
-                # controller_acpi_name = controller["identifiers"]["acpi_path"][controller["identifiers"]["acpi_path"].rindex(":") + 1 :]
-                personality_name: str = controller["identifiers"]["acpi_path"]
+                if self.check_unique(lambda c: c["identifiers"]["acpi_path"].rpartition(".")[2], lambda c: "acpi_path" in c["identifiers"], controller):
+                    personality_name: str = controller["identifiers"]["acpi_path"].rpartition(".")[2]
+                else:
+                    personality_name: str = controller["identifiers"]["acpi_path"][1:]  # Strip leading \
             elif controller["identifiers"].get("bdf"):
                 personality_name: str = ":".join([str(i) for i in controller["identifiers"]["bdf"]])
             else:
@@ -599,7 +607,7 @@ class BaseUSBMap:
         if not self.settings["use_native"]:
             template["OSBundleLibraries"] = {"com.dhinakg.USBToolBox.kext": "1.0.0"}
 
-        write_path = Path("UTBMap.kext")
+        write_path = shared.current_dir / Path("UTBMap.kext")
 
         if write_path.exists():
             print("Removing existing kext...")
@@ -648,18 +656,18 @@ class BaseUSBMap:
     def monu(self):
         response = None
         while not (response and response == utils.TUIMenu.EXIT_MENU):
-            in_between = [("Plist: {}" + Colors.RESET.value).format(Colors.GREEN.value + "Loaded" if self.json_path.exists() else (Colors.RED.value + "None"))]
+            in_between = [("Saved Data: {}" + Colors.RESET.value).format(Colors.GREEN.value + "Loaded" if self.json_path.exists() else (Colors.RED.value + "None"))]
 
             menu = utils.TUIMenu(f"USBToolBox {CURRENT_VERSION}", "Select an option: ", in_between=in_between, top_level=True)
 
             menu_options = [
                 # ["H", "Print Historical", self.print_historical],
                 ["D", "Discover Ports", self.discover_ports],
-                ["S", "Select Ports", self.select_ports],
+                ["S", "Select Ports and Build Kext", self.select_ports],
                 ["C", "Change Settings", self.change_settings],
             ]
             if self.json_path.exists():
-                menu_options.insert(0, ["P", "Delete Plist", self.remove_historical])
+                menu_options.insert(0, ["P", "Delete Saved USB Data", self.remove_historical])
             for i in menu_options:
                 menu.add_menu_option(i[1], None, i[2], i[0])
 

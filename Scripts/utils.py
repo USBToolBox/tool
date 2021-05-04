@@ -84,7 +84,7 @@ class Utils:
     def custom_quit(self):
         self.head()
         print("by DhinakG")
-        print("with code from Corp's USBMap\n")
+        print("with code from CorpNewt's USBMap\n")
         print("Thanks for testing it out!\n")
         # Get the time and wish them a good morning, afternoon, evening, and night
         hr = datetime.datetime.now().time().hour
@@ -178,7 +178,7 @@ class TUIMenu:
 
         while not selected or selected.upper() not in keys:
             nl_count = self.prompt.count("\n") + selected.count("\n") + 1
-            selected = input(f"{ansiescapes.cursorRestorePosition}{ansiescapes.eraseDown}{self.prompt}")
+            selected = input(f"{nl_count * ansiescapes.cursorPrevLine}{ansiescapes.eraseDown}{self.prompt}")
 
         if self.add_quit and selected.upper() == self.return_option[0]:
             return self.EXIT_MENU

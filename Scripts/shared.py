@@ -1,7 +1,16 @@
 # pylint: disable=invalid-name
 import enum
+import sys
 from time import time
 from typing import Callable
+from pathlib import Path
+
+if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+    current_dir = Path(sys.executable).parent
+    resource_dir = Path(sys._MEIPASS) / Path("resources")
+else:
+    current_dir = Path(__file__).parent.parent
+    resource_dir = current_dir / Path("resources")
 
 
 class USBDeviceSpeeds(enum.IntEnum):

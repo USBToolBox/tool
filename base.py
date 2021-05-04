@@ -268,7 +268,7 @@ class BaseUSBMap:
             If not, and they are connected to different ports, they do not have a switch (type 10)."""
             ),
             "",
-            "For more information and pictures, go to https://github.com/USBToolBox/tool/blob/master/README.md.",
+            "For more information and pictures, go to https://github.com/USBToolBox/tool/blob/master/TYPES.md.",
         ]
         utils.TUIMenu("USB Types", "Select an option: ", in_between=in_between).start()
 

@@ -44,18 +44,26 @@ controllers = []
 
 all_devices = {}
 start = time.time()
+
+
+def recurse_bus(instance_id):
+    device = build_dict(instance_id)
+    all_devices[instance_id] = device
+
+    device["devices"] = {}
+    for f in device.get(PnpDeviceProperties.BUS_RELATIONS.value, []):
+        if f.startswith("USB"):
+            device["devices"][f] = recurse_bus(f)
+
+    return device
+
+
 for e in c.Win32_USBController():
     controller = build_dict(e.PNPDeviceID)
     all_devices[e.PNPDeviceID] = dict(controller)
 
     if controller.get(PnpDeviceProperties.BUS_RELATIONS.value, None):
-        controller["root_hub"] = build_dict(controller[PnpDeviceProperties.BUS_RELATIONS.value][0])
-        all_devices[controller[PnpDeviceProperties.BUS_RELATIONS.value][0]] = dict(controller["root_hub"])
-        controller["root_hub"]["devices"] = {}
-
-        for f in controller["root_hub"].get(PnpDeviceProperties.BUS_RELATIONS.value, []):
-            controller["root_hub"]["devices"][f] = build_dict(f)
-            all_devices[f] = dict(controller["root_hub"]["devices"][f])
+        controller["root_hub"] = recurse_bus(controller[PnpDeviceProperties.BUS_RELATIONS.value][0])
 
     controllers.append(controller)
 end = time.time()
@@ -69,4 +77,4 @@ if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
 
 usbdump = json.loads(subprocess.run(usbdump_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode())
 
-print(json.dumps({"wmitest": all_devices, "usbdump": usbdump}, sort_keys=True))
+print(json.dumps({"wmitest": controllers, "usbdump": usbdump}, sort_keys=True))

@@ -22,7 +22,7 @@ Simply download the latest `Windows.exe` from releases. If Windows Defender/othe
 
 ### From Windows PE
 
-Yes this works lol. Some device names may not be as descriptive but if you really don't want to install Windows, you can create a Windows PE USB and hit Shift + F10 to open `cmd,` then run the program.
+Yes this works lol. Some device names may not be as descriptive but if you really don't want to install Windows, you can create a Windows PE USB and hit Shift + F10 to open `cmd`, then run the program.
 
 ### From macOS
 

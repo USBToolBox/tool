@@ -187,12 +187,12 @@ class BaseUSBMap:
                 if not colored:
                     print("  " + self.port_to_str(port))
                 elif port["devices"]:
-                    print("  " + color(self.port_to_str(port)).cyan.bold)
+                    print("  " + color(self.port_to_str(port)).green.bold)
                 elif (
                     self.get_controller_from_list(controller, self.controllers_historical)
                     and [i for i in self.get_controller_from_list(controller, self.controllers_historical)["ports"] if i["index"] == port["index"]][0]["devices"]
                 ):
-                    print("  " + color(self.port_to_str(port)).green.bold)
+                    print("  " + color(self.port_to_str(port)).cyan.bold)
                 else:
                     print("  " + self.port_to_str(port))
 
@@ -315,23 +315,29 @@ class BaseUSBMap:
                 port_count_str = color(port_count_str).red if controller["selected_count"] > 15 else color(port_count_str).green
                 print(self.controller_to_str(controller) + f" | {port_count_str} ports")
                 for port in controller["ports"]:
-                    port_info = f"[{'#' if port['selected'] else ' '}]  {port['selection_index']}. " + self.port_to_str(port)
+                    port_info = f"[{'#' if port['selected'] else ' '}]  {port['selection_index']}.{(len(str(selection_index)) - len(str(port['selection_index'])) + 1) * ' ' }" + self.port_to_str(port)
                     companion = self.get_companion_port(port)
                     if companion:
                         port_info += f" | Companion to {companion['selection_index']}"
-                    print(port_info)
+                    if port["selected"]:
+                        print(color(port_info).green.bold)
+                    else:
+                        print(port_info)
                     if port["comment"]:
-                        print(len(f"[{'#' if port['selected'] else ' '}]  {port['selection_index']}. ") * " " + port["comment"])
+                        print(
+                            len(f"[{'#' if port['selected'] else ' '}]  {port['selection_index']}.{(len(str(selection_index)) - len(str(port['selection_index'])) + 1) * ' ' }") * " "
+                            + color(port["comment"]).blue.bold
+                        )
                     for device in port["devices"]:
-                        self.print_devices(device, indentation="      ")
+                        self.print_devices(device, indentation="      " + len(str(selection_index)) * " " * 2)
                 print()
 
             print(f"Binding companions is currently {color('on').green if self.settings['auto_bind_companions'] else color('off').red}.\n")
 
             print(
                 textwrap.dedent(
-                    """\
-                K. Build UTBMap.kext
+                    f"""\
+                K. Build {'USBMap' if self.settings['use_native'] else 'UTBMap'}.kext
                 A. Select All
                 N. Select None
                 P. Enable All Populated Ports
@@ -607,7 +613,7 @@ class BaseUSBMap:
         if not self.settings["use_native"]:
             template["OSBundleLibraries"] = {"com.dhinakg.USBToolBox.kext": "1.0.0"}
 
-        write_path = shared.current_dir / Path("UTBMap.kext")
+        write_path = shared.current_dir / (Path("USBMap.kext") if self.settings["use_native"] else Path("UTBMap.kext"))
 
         if write_path.exists():
             print("Removing existing kext...")

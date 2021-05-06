@@ -173,3 +173,6 @@ USBMap.kext
 UTBMap.kext
 *USBMap.json
 settings.json
+
+.vscode
+samples/

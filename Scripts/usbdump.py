@@ -66,11 +66,7 @@ def get_device_name(port):
     if not port["DeviceInfoNode"]:
         port["DeviceInfoNode"] = {}
 
-    if (
-        not port["ConnectionInfo"]["DeviceDescriptor"]["iProduct"]
-        or (port["UsbDeviceProperties"].get("DeviceDesc") or port["DeviceInfoNode"].get("DeviceDescName"))
-        and (port["UsbDeviceProperties"].get("DeviceDesc") or port["DeviceInfoNode"].get("DeviceDescName")) != "USB Composite Device"
-    ):
+    if not port["ConnectionInfo"]["DeviceDescriptor"]["iProduct"]:
         return port["UsbDeviceProperties"].get("DeviceDesc") or port["DeviceInfoNode"].get("DeviceDescName")
     for string_desc in port["StringDescs"] or []:
         if string_desc["DescriptorIndex"] == port["ConnectionInfo"]["DeviceDescriptor"]["iProduct"]:
@@ -207,7 +203,7 @@ def get_controllers():
         usbdump_path = Path(sys._MEIPASS) / usbdump_path
 
     info = json.loads(subprocess.run(usbdump_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode())
-    # info = json.load(Path("/Users/dhinak/Downloads/obummer.txt").open())
+    # info = json.load(Path("samples/alfa147.json").open())["usbdump"]
     for controller in info:
         # root
         controller_info = {

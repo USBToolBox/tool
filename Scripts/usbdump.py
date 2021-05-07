@@ -110,7 +110,7 @@ def guess_ports():
             if not port["status"].endswith("DeviceConnected"):
                 # we don't have info. anything else is going to error
                 port["guessed"] = None
-            elif port["type_c"] or port["companion_info"]["port"] and get_companion_port(port)["type_c"]:
+            elif port["type_c"] or port["companion_info"]["port"] and get_companion_port(port).get("type_c", None):
                 port["guessed"] = shared.USBPhysicalPortTypes.USB3TypeC_WithSwitch
             elif not port["user_connectable"]:
                 port["guessed"] = shared.USBPhysicalPortTypes.Internal
@@ -157,9 +157,13 @@ def serialize_hub(hub):
         }
         port_info["name"] = f"Port {port_info['index']}"
 
+        friendly_error = {
+            "DeviceCausedOvercurrent": "Device connected to port pulled too much current."
+        }
+
         if not port_info["status"].endswith("DeviceConnected"):
             # shared.debug(f"Device connected to port {port_info['index']} errored. Please unplug or connect a different device.")
-            port_info["devices"] = [{"error": True}]
+            port_info["devices"] = [{"error": friendly_error.get(port_info["status"], True)}]
             hub_info["ports"].append(port_info)
             continue
 

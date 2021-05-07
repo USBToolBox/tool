@@ -4,7 +4,8 @@ import sys
 import time
 from enum import Enum
 from pathlib import Path
-
+import tkinter as tk
+import tkinter.filedialog as filedialog
 import win32com.client
 import wmi
 
@@ -77,4 +78,15 @@ if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
 
 usbdump = json.loads(subprocess.run(usbdump_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode())
 
-print(json.dumps({"wmitest": controllers, "usbdump": usbdump}, sort_keys=True))
+temp_tk_root = tk.Tk()
+temp_tk_root.wm_withdraw()
+save_path = filedialog.asksaveasfilename(title="Save debugging information", defaultextension=".json", filetypes=[("json", "*.json")])
+temp_tk_root.destroy()
+
+if not save_path:
+    sys.exit(1)
+else:
+    save_path = Path(save_path)
+
+json.dump({"wmitest": controllers, "usbdump": usbdump}, save_path.open("w"), sort_keys=True)
+input(f"Please upload {save_path}.\nPress [Enter] to exit")

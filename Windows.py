@@ -111,7 +111,7 @@ class WindowsUSBMap(BaseUSBMap):
                 self.update_usbdump()
                 break
             except Exception as e:
-                if i == 10:
+                if i == 9:
                     raise
                 else:
                     shared.debug(e)

@@ -14,7 +14,7 @@ from termcolor2 import c as color
 
 from Scripts import shared, utils
 
-CURRENT_VERSION = "0.0.7"
+CURRENT_VERSION = "0.0.8"
 
 
 class Colors(Enum):
@@ -207,7 +207,7 @@ class BaseUSBMap:
         if isinstance(device, str):
             print(f"{indentation}- {device}")
         elif device.get("error", False):
-            print(f"{indentation}- Device connected to port errored. Please unplug or connect a different device.")
+            print(f"{indentation}- {device['error'] if isinstance(device['error'], str) else 'Device connected to port errored.'} Please unplug or connect a different device.")
         else:
             print(f"{indentation}- {device['name'].strip()} - operating at {shared.USBDeviceSpeeds(device['speed'])}")
             for i in device["devices"]:

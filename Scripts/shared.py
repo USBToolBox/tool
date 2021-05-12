@@ -5,6 +5,10 @@ from time import time
 from typing import Callable
 from pathlib import Path
 
+from Scripts._build import BUILD
+
+VERSION = "0.0.9"
+
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     current_dir = Path(sys.executable).parent
     resource_dir = Path(sys._MEIPASS) / Path("resources")

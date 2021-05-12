@@ -2,12 +2,15 @@ import json
 import subprocess
 import sys
 import time
-from enum import Enum
-from pathlib import Path
 import tkinter as tk
 import tkinter.filedialog as filedialog
+from enum import Enum
+from pathlib import Path
+
 import win32com.client
 import wmi
+
+from Scripts import shared
 
 c = wmi.WMI()
 
@@ -88,5 +91,5 @@ if not save_path:
 else:
     save_path = Path(save_path)
 
-json.dump({"wmitest": controllers, "usbdump": usbdump}, save_path.open("w"), sort_keys=True)
+json.dump({"info": {"version": shared.VERSION, "build": shared.BUILD}, "wmitest": controllers, "usbdump": usbdump}, save_path.open("w"), sort_keys=True)
 input(f"Please upload {save_path}.\nPress [Enter] to exit")

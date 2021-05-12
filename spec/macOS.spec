@@ -1,5 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path.cwd()))
+
+from spec.insert_version import write_version
+write_version()
+
 block_cipher = None
 
 

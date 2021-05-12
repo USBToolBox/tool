@@ -14,7 +14,6 @@ from termcolor2 import c as color
 
 from Scripts import shared, utils
 
-CURRENT_VERSION = "0.0.8"
 
 
 class Colors(Enum):
@@ -37,7 +36,7 @@ def read_property(input_value: bytes, places: int):
 
 class BaseUSBMap:
     def __init__(self):
-        self.utils = utils.Utils(f"USBToolBox {CURRENT_VERSION}".strip())
+        self.utils = utils.Utils(f"USBToolBox {shared.VERSION}".strip())
         self.controllers = None
         self.json_path = shared.current_dir / Path("usb.json")
         self.settings_path = shared.current_dir / Path("settings.json")
@@ -664,7 +663,7 @@ class BaseUSBMap:
         while not (response and response == utils.TUIMenu.EXIT_MENU):
             in_between = [("Saved Data: {}" + Colors.RESET.value).format(Colors.GREEN.value + "Loaded" if self.json_path.exists() else (Colors.RED.value + "None"))]
 
-            menu = utils.TUIMenu(f"USBToolBox {CURRENT_VERSION}", "Select an option: ", in_between=in_between, top_level=True)
+            menu = utils.TUIMenu(f"USBToolBox {shared.VERSION}", "Select an option: ", in_between=in_between, top_level=True)
 
             menu_options = [
                 # ["H", "Print Historical", self.print_historical],

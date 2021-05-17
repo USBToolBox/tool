@@ -71,7 +71,7 @@ def get_device_name(port):
     for string_desc in port["StringDescs"] or []:
         if string_desc["DescriptorIndex"] == port["ConnectionInfo"]["DeviceDescriptor"]["iProduct"]:
             return string_desc["StringDescriptor"][0]["bString"]
-    return port["UsbDeviceProperties"].get("DeviceDesc") or port["DeviceInfoNode"].get("DeviceDescName")
+    return port["UsbDeviceProperties"].get("DeviceDesc") or port["DeviceInfoNode"].get("DeviceDescName") or "Unknown"
 
 
 def get_hub_type(port):
@@ -179,7 +179,7 @@ def serialize_hub(hub):
         # Guess port type
 
         if port["ConnectionInfo"]["ConnectionStatus"] == "DeviceConnected":
-            device_info = {"name": get_device_name(port), "instance_id": port["UsbDeviceProperties"]["DeviceId"], "devices": []}
+            device_info = {"name": get_device_name(port), "instance_id": port["UsbDeviceProperties"].get("DeviceId") or "Unknown", "devices": []}
 
             if port["DeviceInfoType"] == "ExternalHubInfo":
                 external_hub = serialize_hub(port)

@@ -56,13 +56,18 @@ jobs:
         run: pip3 install pyinstaller
 
       - name: Build for Windows
-        run: pyinstaller spec\Windows.spec && pyinstaller spec\Windows_dir.spec && pyinstaller spec\debug_dump.spec
+        run: pyinstaller spec\Windows.spec && pyinstaller spec\Windows_dir.spec && pyinstaller spec\debug_dump.spec && pyinstaller spec\debug_dump_dir.spec
 
       - uses: papeloto/action-zip@v1
         with:
           files: dist/Windows/
           recursive: false
           dest: dist/Windows.zip
+      - uses: papeloto/action-zip@v1
+        with:
+          files: dist/debug_dump/
+          recursive: false
+          dest: dist/debug_dump.zip
 
       - name: Upload to Artifacts
         uses: actions/upload-artifact@v2
@@ -70,20 +75,12 @@ jobs:
           name: Artifacts Windows
           path: |
             dist/*.exe
-            dist/Windows.zip
+            dist/*.zip
       - name: Upload to Release
         if: github.event_name == 'release'
         uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/*.exe
-          tag: ${{ github.ref }}
-          file_glob: true
-      - name: Upload to Release 2
-        if: github.event_name == 'release'
-        uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/Windows.zip
+          file: dist/*.*
           tag: ${{ github.ref }}
           file_glob: true

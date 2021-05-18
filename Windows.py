@@ -77,7 +77,7 @@ class WindowsUSBMap(BaseUSBMap):
     def get_name_from_wmi(self, device):
         if not isinstance(device, dict):
             return
-        if device.get("error"):
+        if device.get("error") or not device["instance_id"]:
             return
         device["name"] = self.get_property_from_wmi(device["instance_id"], PnpDeviceProperties.BUS_REPORTED_NAME) or device["name"]
         for i in device["devices"]:

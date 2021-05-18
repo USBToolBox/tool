@@ -20,6 +20,8 @@ hub_map = {}
 
 
 def get_port_type(port):
+    if not port["ConnectionInfoV2"]:
+        return shared.USBDeviceSpeeds.Unknown
     supported_usb_protocols = port["ConnectionInfoV2"]["SupportedUsbProtocols"]
     if supported_usb_protocols["Usb300"]:
         return shared.USBDeviceSpeeds.SuperSpeed
@@ -39,16 +41,16 @@ def get_device_speed(port):
         speed = shared.USBDeviceSpeeds.FullSpeed
     elif speed == shared.USBDeviceSpeeds.HighSpeed:
         speed = shared.USBDeviceSpeeds.HighSpeed
-    elif speed == shared.USBDeviceSpeeds.SuperSpeed and port["ConnectionInfoV2"]["Flags"]["DeviceIsOperatingAtSuperSpeedPlusOrHigher"]:
+    elif speed == shared.USBDeviceSpeeds.SuperSpeed and port["ConnectionInfoV2"] and port["ConnectionInfoV2"]["Flags"]["DeviceIsOperatingAtSuperSpeedPlusOrHigher"]:
         return (shared.USBDeviceSpeeds.SuperSpeedPlus, None)
     elif speed == shared.USBDeviceSpeeds.SuperSpeed:
         speed = shared.USBDeviceSpeeds.SuperSpeed
     else:
         return (shared.USBDeviceSpeeds.Unknown, speed)
 
-    if port["ConnectionInfoV2"]["Flags"]["DeviceIsSuperSpeedPlusCapableOrHigher"]:
+    if port["ConnectionInfoV2"] and port["ConnectionInfoV2"]["Flags"]["DeviceIsSuperSpeedPlusCapableOrHigher"]:
         return (speed, shared.USBDeviceSpeeds.SuperSpeedPlus)
-    elif speed < shared.USBDeviceSpeeds.SuperSpeed and port["ConnectionInfoV2"]["Flags"]["DeviceIsSuperSpeedCapableOrHigher"]:
+    elif speed < shared.USBDeviceSpeeds.SuperSpeed and port["ConnectionInfoV2"] and port["ConnectionInfoV2"]["Flags"]["DeviceIsSuperSpeedCapableOrHigher"]:
         return (speed, shared.USBDeviceSpeeds.SuperSpeed)
     else:
         return (speed, None)
@@ -67,11 +69,11 @@ def get_device_name(port):
         port["DeviceInfoNode"] = {}
 
     if not port["ConnectionInfo"]["DeviceDescriptor"]["iProduct"]:
-        return port["UsbDeviceProperties"].get("DeviceDesc") or port["DeviceInfoNode"].get("DeviceDescName")
+        return port["UsbDeviceProperties"].get("DeviceDesc") or port["DeviceInfoNode"].get("DeviceDescName", "Unknown Device")
     for string_desc in port["StringDescs"] or []:
         if string_desc["DescriptorIndex"] == port["ConnectionInfo"]["DeviceDescriptor"]["iProduct"]:
             return string_desc["StringDescriptor"][0]["bString"]
-    return port["UsbDeviceProperties"].get("DeviceDesc") or port["DeviceInfoNode"].get("DeviceDescName")
+    return port["UsbDeviceProperties"].get("DeviceDesc") or port["DeviceInfoNode"].get("DeviceDescName", "Unknown Device")
 
 
 def get_hub_type(port):
@@ -157,9 +159,7 @@ def serialize_hub(hub):
         }
         port_info["name"] = f"Port {port_info['index']}"
 
-        friendly_error = {
-            "DeviceCausedOvercurrent": "Device connected to port pulled too much current."
-        }
+        friendly_error = {"DeviceCausedOvercurrent": "Device connected to port pulled too much current."}
 
         if not port_info["status"].endswith("DeviceConnected"):
             # shared.debug(f"Device connected to port {port_info['index']} errored. Please unplug or connect a different device.")
@@ -168,18 +168,21 @@ def serialize_hub(hub):
             continue
 
         port_info["class"] = get_port_type(port)
+        if not port["PortConnectorProps"]:
+            port["PortConnectorProps"] = {}
+
         port_info["companion_info"] = {
-            "port": port["PortConnectorProps"]["CompanionPortNumber"],
-            "hub": port["PortConnectorProps"]["CompanionHubSymbolicLinkName"],
-            "multiple_companions": bool(port["PortConnectorProps"]["UsbPortProperties"]["PortHasMultipleCompanions"]),
+            "port": port["PortConnectorProps"].get("CompanionPortNumber", ""),
+            "hub": port["PortConnectorProps"].get("CompanionHubSymbolicLinkName", ""),
+            "multiple_companions": bool(port["PortConnectorProps"].get("UsbPortProperties", {}).get("PortHasMultipleCompanions", False)),
         }
-        port_info["type_c"] = bool(port["PortConnectorProps"]["UsbPortProperties"]["PortConnectorIsTypeC"])
-        port_info["user_connectable"] = bool(port["PortConnectorProps"]["UsbPortProperties"]["PortIsUserConnectable"])
+        port_info["type_c"] = bool(port["PortConnectorProps"].get("UsbPortProperties", {}).get("PortConnectorIsTypeC", False))
+        port_info["user_connectable"] = bool(port["PortConnectorProps"].get("UsbPortProperties", {}).get("PortIsUserConnectable", True))
 
         # Guess port type
 
         if port["ConnectionInfo"]["ConnectionStatus"] == "DeviceConnected":
-            device_info = {"name": get_device_name(port), "instance_id": port["UsbDeviceProperties"]["DeviceId"], "devices": []}
+            device_info = {"name": get_device_name(port), "instance_id": port["UsbDeviceProperties"].get("DeviceId"), "devices": []}
 
             if port["DeviceInfoType"] == "ExternalHubInfo":
                 external_hub = serialize_hub(port)
@@ -209,6 +212,10 @@ def get_controllers():
     info = json.loads(subprocess.run(usbdump_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode())
     # info = json.load(Path("samples/alfa147.json").open())["usbdump"]
     for controller in info:
+        if not controller["RootHub"]:
+            # This is useless
+            continue
+
         # root
         controller_info = {
             "name": controller["UsbDeviceProperties"]["DeviceDesc"],
@@ -226,7 +233,7 @@ def get_controllers():
         if controller["SubSysID"] not in [0, int("0xFFFFFFFF", 16)]:
             controller_info["identifiers"]["pci_id"] += [hex(controller["SubSysID"])[2:6], hex(controller["SubSysID"])[6:]]
 
-        if controller["ControllerInfo"]["PciRevision"] not in [0, int("0xFF", 16)]:
+        if (controller.get("ControllerInfo") or {}).get("PciRevision", 0) not in [0, int("0xFF", 16)]:
             controller_info["identifiers"]["pci_revision"] = int(controller["ControllerInfo"]["PciRevision"])
 
         if controller["BusDeviceFunctionValid"]:

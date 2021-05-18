@@ -48,9 +48,19 @@ This is gonna be a very basic guide for now. A fully-fleshed guide will be relea
     * Make sure to remove `UTBDefault.kext` <!-- i need a better name for this lol -->, if you have it.
 9. Reboot and you should have your USB map working!
 
-## Known Issues
+## Known Issues/FAQ
 
-See the [issues tab](https://github.com/USBToolBox/tool/issues)
+See the [issues tab](https://github.com/USBToolBox/tool/issues) for known issues.
+
+### FAQ
+
+* Q: Why is some information missing?
+
+  A: Make sure you have drivers installed for all your devices. On Windows, some information is missing if you don't have drivers installed, leading USBToolBox to report them as unknown.
+
+* Q: How do I report a bug?
+
+  A: Please go to the [new issue](https://github.com/USBToolBox/tool/issues/new/choose) page, click on "Bug report", and read through the steps before filling them out. Please ensure that you respond to my inquiries as there's no other way I can fix bugs.
 
 ## Credits
 

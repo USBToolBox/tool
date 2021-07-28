@@ -142,60 +142,61 @@ def serialize_hub(hub):
 
     # HubPorts
     hub_ports = hub["HubPorts"]
-    for i, port in enumerate(hub_ports):
-        if not port:
-            continue
-        port_info = {
-            "index": (port.get("PortConnectorProps") or {}).get("ConnectionIndex")
-            or (port.get("ConnectionInfo") or {}).get("ConnectionIndex")
-            or (port.get("ConnectionInfoV2") or {}).get("ConnectionIndex")
-            or i + 1,
-            "comment": None,
-            "class": shared.USBDeviceSpeeds.Unknown,
-            "status": port["ConnectionInfo"]["ConnectionStatus"],
-            "type": None,
-            "guessed": None,
-            "devices": [],
-        }
-        port_info["name"] = f"Port {port_info['index']}"
+    if hub_ports:  # For some reason, this is sometimes null? Botched driver?
+        for i, port in enumerate(hub_ports):
+            if not port:
+                continue
+            port_info = {
+                "index": (port.get("PortConnectorProps") or {}).get("ConnectionIndex")
+                or (port.get("ConnectionInfo") or {}).get("ConnectionIndex")
+                or (port.get("ConnectionInfoV2") or {}).get("ConnectionIndex")
+                or i + 1,
+                "comment": None,
+                "class": shared.USBDeviceSpeeds.Unknown,
+                "status": port["ConnectionInfo"]["ConnectionStatus"],
+                "type": None,
+                "guessed": None,
+                "devices": [],
+            }
+            port_info["name"] = f"Port {port_info['index']}"
 
-        friendly_error = {"DeviceCausedOvercurrent": "Device connected to port pulled too much current."}
+            friendly_error = {"DeviceCausedOvercurrent": "Device connected to port pulled too much current."}
 
-        if not port_info["status"].endswith("DeviceConnected"):
-            # shared.debug(f"Device connected to port {port_info['index']} errored. Please unplug or connect a different device.")
-            port_info["devices"] = [{"error": friendly_error.get(port_info["status"], True)}]
+            if not port_info["status"].endswith("DeviceConnected"):
+                # shared.debug(f"Device connected to port {port_info['index']} errored. Please unplug or connect a different device.")
+                port_info["devices"] = [{"error": friendly_error.get(port_info["status"], True)}]
+                hub_info["ports"].append(port_info)
+                continue
+
+            port_info["class"] = get_port_type(port)
+            if not port["PortConnectorProps"]:
+                port["PortConnectorProps"] = {}
+
+            port_info["companion_info"] = {
+                "port": port["PortConnectorProps"].get("CompanionPortNumber", ""),
+                "hub": port["PortConnectorProps"].get("CompanionHubSymbolicLinkName", ""),
+                "multiple_companions": bool(port["PortConnectorProps"].get("UsbPortProperties", {}).get("PortHasMultipleCompanions", False)),
+            }
+            port_info["type_c"] = bool(port["PortConnectorProps"].get("UsbPortProperties", {}).get("PortConnectorIsTypeC", False))
+            port_info["user_connectable"] = bool(port["PortConnectorProps"].get("UsbPortProperties", {}).get("PortIsUserConnectable", True))
+
+            # Guess port type
+
+            if port["ConnectionInfo"]["ConnectionStatus"] == "DeviceConnected":
+                device_info = {"name": get_device_name(port), "instance_id": port["UsbDeviceProperties"].get("DeviceId"), "devices": []}
+
+                if port["DeviceInfoType"] == "ExternalHubInfo":
+                    external_hub = serialize_hub(port)
+                    device_info["speed"] = get_device_speed_string(port, external_hub["port_count"])
+                    device_info["devices"] = [i for i in itertools.chain.from_iterable([hub_port["devices"] for hub_port in external_hub["ports"]]) if i]
+                    # device_info["hub_type"] = get_hub_type(port)
+                    # device_info["hub"] = serialize_hub(port)
+                else:
+                    device_info["speed"] = get_device_speed_string(port)
+
+                port_info["devices"].append(device_info)
+
             hub_info["ports"].append(port_info)
-            continue
-
-        port_info["class"] = get_port_type(port)
-        if not port["PortConnectorProps"]:
-            port["PortConnectorProps"] = {}
-
-        port_info["companion_info"] = {
-            "port": port["PortConnectorProps"].get("CompanionPortNumber", ""),
-            "hub": port["PortConnectorProps"].get("CompanionHubSymbolicLinkName", ""),
-            "multiple_companions": bool(port["PortConnectorProps"].get("UsbPortProperties", {}).get("PortHasMultipleCompanions", False)),
-        }
-        port_info["type_c"] = bool(port["PortConnectorProps"].get("UsbPortProperties", {}).get("PortConnectorIsTypeC", False))
-        port_info["user_connectable"] = bool(port["PortConnectorProps"].get("UsbPortProperties", {}).get("PortIsUserConnectable", True))
-
-        # Guess port type
-
-        if port["ConnectionInfo"]["ConnectionStatus"] == "DeviceConnected":
-            device_info = {"name": get_device_name(port), "instance_id": port["UsbDeviceProperties"].get("DeviceId"), "devices": []}
-
-            if port["DeviceInfoType"] == "ExternalHubInfo":
-                external_hub = serialize_hub(port)
-                device_info["speed"] = get_device_speed_string(port, external_hub["port_count"])
-                device_info["devices"] = [i for i in itertools.chain.from_iterable([hub_port["devices"] for hub_port in external_hub["ports"]]) if i]
-                # device_info["hub_type"] = get_hub_type(port)
-                # device_info["hub"] = serialize_hub(port)
-            else:
-                device_info["speed"] = get_device_speed_string(port)
-
-            port_info["devices"].append(device_info)
-
-        hub_info["ports"].append(port_info)
     hub_info["ports"].sort(key=itemgetter("index"))
     hub_map[hub_info["hub_name"]] = hub_info
     return hub_info

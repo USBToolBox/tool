@@ -169,7 +169,7 @@ class BaseUSBMap:
         elif port["guessed"] is not None:
             port_type = (str(shared.USBPhysicalPortTypes(port["guessed"])) if self.settings["show_friendly_types"] else str(shared.USBPhysicalPortTypes(port["guessed"]).value)) + " (guessed)"
         else:
-            port_type = "unknown"
+            port_type = "Unknown"
 
         return f"{port['name']} | {shared.USBDeviceSpeeds(port['class'])} | " + (str(port_type) if self.settings["show_friendly_types"] else f"Type {port_type}")
 

@@ -336,7 +336,7 @@ class BaseUSBMap:
             print(
                 textwrap.dedent(
                     f"""\
-                K. Build {'USBMap' if self.settings['use_native'] else 'UTBMap'}.kext
+                K. Build {'USBMap' if self.settings['use_native'] else 'UTBMap'}.kext{' (requires USBToolBox.kext)' if self.settings['use_native'] else ''}
                 A. Select All
                 N. Select None
                 P. Enable All Populated Ports

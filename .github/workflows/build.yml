@@ -58,12 +58,12 @@ jobs:
       - name: Build for Windows
         run: pyinstaller spec\Windows.spec && pyinstaller spec\Windows_dir.spec && pyinstaller spec\debug_dump.spec && pyinstaller spec\debug_dump_dir.spec
 
-      - uses: papeloto/action-zip@v1
+      - uses: vimtor/action-zip@v1
         with:
           files: dist/Windows/
           recursive: false
           dest: dist/Windows.zip
-      - uses: papeloto/action-zip@v1
+      - uses: vimtor/action-zip@v1
         with:
           files: dist/debug_dump/
           recursive: false

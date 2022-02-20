@@ -79,7 +79,13 @@ usbdump_path = Path("resources/usbdump.exe")
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     usbdump_path = Path(sys._MEIPASS) / usbdump_path
 
-usbdump = json.loads(subprocess.run(usbdump_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode())
+
+output = subprocess.run(usbdump_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode()
+
+try:
+    usbdump = json.loads(output)
+except json.JSONDecodeError:
+    usbdump = {"error": "usbdump.exe returned an invalid JSON", "raw": output}
 
 temp_tk_root = tk.Tk()
 temp_tk_root.wm_withdraw()

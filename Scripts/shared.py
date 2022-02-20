@@ -127,7 +127,11 @@ def debug(str):
     if False:
         input(f"DEBUG: {str}\nPress enter to continue")
 
-test_mode = False
+test_mode = True
+if test_mode:
+    debug_dump_path = Path(input("Debug dump path: ").strip().replace("'", "").replace('"', ""))
+else:
+    debug_dump_path = None
 
 # def speed_to_name(speed: USBDeviceSpeeds):
 #     return _usb_protocol_names[speed]

@@ -27,8 +27,7 @@ class WindowsUSBMap(BaseUSBMap):
         self.usbdump = None
         if shared.test_mode:
             self.wmi = {}
-            self.wmi_path = Path(input("WMI json path: "))
-            self.wmi_cache: dict = {p["DEVPKEY_Device_InstanceId"]: p for p in json.load(self.wmi_path.open())["wmitest"] if "duration" not in p}
+            self.wmi_cache: dict = {p["DEVPKEY_Device_InstanceId"]: p for p in json.load(shared.debug_dump_path.open())["wmitest"] if "duration" not in p}
         else:
             self.wmi = wmi.WMI()
             self.wmi_cache = {}

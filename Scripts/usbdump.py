@@ -210,8 +210,7 @@ def get_controllers():
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
         usbdump_path = Path(sys._MEIPASS) / usbdump_path
 
-    info = json.loads(subprocess.run(usbdump_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode())
-    # info = json.load(Path("samples/alfa147.json").open())["usbdump"]
+    info = json.load(Path(input("WMI json path: ")).open())["usbdump"] if shared.test_mode else json.loads(subprocess.run(usbdump_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode())
     for controller in info:
         if not controller["RootHub"]:
             # This is useless

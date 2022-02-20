@@ -1,4 +1,5 @@
 import copy
+import json
 import time
 from enum import Enum
 from pathlib import Path
@@ -24,10 +25,13 @@ class PnpDeviceProperties(Enum):
 class WindowsUSBMap(BaseUSBMap):
     def __init__(self):
         self.usbdump = None
-        self.wmi = wmi.WMI()
-        # self.wmi_path = Path(input("WMI json path: "))
-        # self.wmi: dict = json.load(self.wmi_path.open())
-        self.wmi_cache = {}
+        if shared.test_mode:
+            self.wmi = {}
+            self.wmi_path = Path(input("WMI json path: "))
+            self.wmi_cache: dict = {p["DEVPKEY_Device_InstanceId"]: p for p in json.load(self.wmi_path.open())["wmitest"] if "duration" not in p}
+        else:
+            self.wmi = wmi.WMI()
+            self.wmi_cache = {}
         self.wmi_retries = {}
         super().__init__()
 
@@ -37,9 +41,9 @@ class WindowsUSBMap(BaseUSBMap):
     def get_property_from_wmi(self, instance_id, prop: PnpDeviceProperties):
         MAX_TRIES = 2
         result = None
-        if self.wmi_cache.get(instance_id, {}).get(prop):
-            return self.wmi_cache[instance_id][prop]
-        elif self.wmi_retries.get(instance_id, {}).get(prop, 0) >= MAX_TRIES:
+        if self.wmi_cache.get(instance_id, {}).get(prop.value):
+            return self.wmi_cache[instance_id][prop.value]
+        elif self.wmi_retries.get(instance_id, {}).get(prop.value, 0) >= MAX_TRIES:
             return None
 
         try:
@@ -49,18 +53,18 @@ class WindowsUSBMap(BaseUSBMap):
             return None
         except AttributeError:
             if not self.wmi_retries.get(instance_id):
-                self.wmi_retries[instance_id] = {prop: 1}
-            elif not self.wmi_retries[instance_id].get(prop):
-                self.wmi_retries[instance_id][prop] = 1
+                self.wmi_retries[instance_id] = {prop.value: 1}
+            elif not self.wmi_retries[instance_id].get(prop.value):
+                self.wmi_retries[instance_id][prop.value] = 1
             else:
-                self.wmi_retries[instance_id][prop] += 1
+                self.wmi_retries[instance_id][prop.value] += 1
 
             return None
 
         if not self.wmi_cache.get(instance_id):
-            self.wmi_cache[instance_id] = {prop: result}
+            self.wmi_cache[instance_id] = {prop.value: result}
         else:
-            self.wmi_cache[instance_id][prop] = result
+            self.wmi_cache[instance_id][prop.value] = result
 
         return result
 
@@ -115,7 +119,7 @@ class WindowsUSBMap(BaseUSBMap):
                     raise
                 else:
                     shared.debug(e)
-                    time.sleep(2)
+                    time.sleep(0.05 if shared.test_mode else 2)
 
         controllers = self.usbdump
 

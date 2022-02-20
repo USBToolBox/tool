@@ -127,6 +127,7 @@ def debug(str):
     if False:
         input(f"DEBUG: {str}\nPress enter to continue")
 
+test_mode = False
 
 # def speed_to_name(speed: USBDeviceSpeeds):
 #     return _usb_protocol_names[speed]

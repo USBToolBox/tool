@@ -101,9 +101,9 @@ def get_hub_type(port):
 def get_hub_by_name(name):
     return hub_map.get(name)
 
-
+# TODO: Figure out how to deal with the hub name not matching
 def get_companion_port(port):
-    return [i for i in hub_map[port["companion_info"]["hub"]]["ports"] if i["index"] == port["companion_info"]["port"]][0]
+    return ([i for i in hub_map.get(port["companion_info"]["hub"], {"ports": []})["ports"] if i["index"] == port["companion_info"]["port"]] or [None])[0]
 
 
 def guess_ports():
@@ -112,16 +112,18 @@ def guess_ports():
             if not port["status"].endswith("DeviceConnected"):
                 # we don't have info. anything else is going to error
                 port["guessed"] = None
-            elif port["type_c"] or port["companion_info"]["port"] and get_companion_port(port).get("type_c", None):
+            elif port["type_c"] or port["companion_info"]["port"] and get_companion_port(port) and get_companion_port(port).get("type_c", None):
                 port["guessed"] = shared.USBPhysicalPortTypes.USB3TypeC_WithSwitch
             elif not port["user_connectable"]:
                 port["guessed"] = shared.USBPhysicalPortTypes.Internal
             elif (
                 port["class"] == shared.USBDeviceSpeeds.SuperSpeed
                 and port["companion_info"]["port"]
+                and get_companion_port(port)
                 and get_companion_port(port)["class"] == shared.USBDeviceSpeeds.HighSpeed
                 or port["class"] == shared.USBDeviceSpeeds.HighSpeed
                 and port["companion_info"]["port"]
+                and get_companion_port(port)
                 and get_companion_port(port)["class"] == shared.USBDeviceSpeeds.SuperSpeed
             ):
                 port["guessed"] = shared.USBPhysicalPortTypes.USB3TypeA

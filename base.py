@@ -42,7 +42,7 @@ class BaseUSBMap:
         self.settings_path = shared.current_dir / Path("settings.json")
 
         self.settings = (
-            json.load(self.settings_path.open()) if self.settings_path.exists() else {"show_friendly_types": False, "use_native": False, "add_comments_to_map": True, "auto_bind_companions": True}
+            json.load(self.settings_path.open()) if self.settings_path.exists() else {"show_friendly_types": True, "use_native": False, "add_comments_to_map": True, "auto_bind_companions": True}
         )
         self.controllers_historical = json.load(self.json_path.open("r")) if self.json_path.exists() else None
 

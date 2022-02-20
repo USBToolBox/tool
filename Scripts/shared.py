@@ -127,7 +127,7 @@ def debug(str):
     if False:
         input(f"DEBUG: {str}\nPress enter to continue")
 
-test_mode = True
+test_mode = False
 if test_mode:
     debug_dump_path = Path(input("Debug dump path: ").strip().replace("'", "").replace('"', ""))
 else:

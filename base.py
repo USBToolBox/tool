@@ -42,7 +42,7 @@ class BaseUSBMap:
         self.settings_path = shared.current_dir / Path("settings.json")
 
         self.settings = (
-            json.load(self.settings_path.open()) if self.settings_path.exists() else {"show_friendly_types": True, "use_native": False, "add_comments_to_map": True, "auto_bind_companions": True}
+            json.load(self.settings_path.open()) if self.settings_path.exists() else {"show_friendly_types": True, "use_native": False, "use_legacy_native": False, "add_comments_to_map": True, "auto_bind_companions": True}
         )
         self.controllers_historical = json.load(self.json_path.open("r")) if self.json_path.exists() else None
 
@@ -333,10 +333,18 @@ class BaseUSBMap:
 
             print(f"Binding companions is currently {color('on').green if self.settings['auto_bind_companions'] else color('off').red}.\n")
 
+            output_kext = None
+            if self.settings["use_native"] and self.settings["use_legacy_native"]:
+                output_kext = "USBMapLegacy.kext"
+            elif self.settings["use_native"]:
+                output_kext = "USBMap.kext"
+            else:
+                output_kext = "UTBMap.kext (requires USBToolBox.kext)"
+
             print(
                 textwrap.dedent(
                     f"""\
-                K. Build {'USBMap' if self.settings['use_native'] else 'UTBMap'}.kext{' (requires USBToolBox.kext)' if self.settings['use_native'] else ''}
+                K. Build {output_kext}
                 A. Select All
                 N. Select None
                 P. Enable All Populated Ports
@@ -527,7 +535,7 @@ class BaseUSBMap:
                     "Enter Model Identifier",
                     "Enter the model identifier: ",
                     [
-                        "You are seeing this as you have selected to use AppleUSBHostController. Model identifier autodetection is unavailable as you are not on macOS.",
+                        "You are seeing this as you have selected to use native classes. Model identifier autodetection is unavailable as you are not on macOS.",
                         "Please enter the model identifier of the target system below. You can find it in System Information or with 'system_profiler -detailLevel mini SPHardwareDataType'.",
                     ],
                 ).start()
@@ -557,8 +565,8 @@ class BaseUSBMap:
 
             if self.settings["use_native"]:
                 personality = {
-                    "CFBundleIdentifier": "com.apple.driver.AppleUSBHostMergeProperties",
-                    "IOClass": "AppleUSBHostMergeProperties",
+                    "CFBundleIdentifier": "com.apple.driver." + ("AppleUSBMergeNub" if self.settings["use_legacy_native"] else "AppleUSBHostMergeProperties"),
+                    "IOClass": ("AppleUSBMergeNub" if self.settings["use_legacy_native"] else "AppleUSBHostMergeProperties"),
                     "IOProviderClass": "AppleUSBHostController",
                     "IOParentMatch": self.choose_matching_key(controller),
                     "model": model_identifier,
@@ -612,7 +620,15 @@ class BaseUSBMap:
         if not self.settings["use_native"]:
             template["OSBundleLibraries"] = {"com.dhinakg.USBToolBox.kext": "1.0.0"}
 
-        write_path = shared.current_dir / (Path("USBMap.kext") if self.settings["use_native"] else Path("UTBMap.kext"))
+        output_kext = None
+        if self.settings["use_native"] and self.settings["use_legacy_native"]:
+            output_kext = "USBMapLegacy.kext"
+        elif self.settings["use_native"]:
+            output_kext = "USBMap.kext"
+        else:
+            output_kext = "UTBMap.kext"
+
+        write_path = shared.current_dir / Path(output_kext)
 
         if write_path.exists():
             print("Removing existing kext...")
@@ -646,6 +662,7 @@ class BaseUSBMap:
         for i in [
             ["T", *combination("Show Friendly Types", "show_friendly_types"), ["Show friendly types (ie. 'USB 3 Type A') instead of numbers."]],
             ["N", *combination("Use Native Classes", "use_native"), ["Use native Apple classes (AppleUSBHostMergeProperties) instead of the USBToolBox kext."]],
+            ["L", *combination("Use Legacy Native Classes (requires Use Native Classes)", "use_legacy_native"), ["Use AppleUSBMergeNub instead of AppleUSBHostMergeProperties, for legacy macOS."]],
             ["A", *combination("Add Comments to Map", "add_comments_to_map"), ["Add port comments inside the map."]],
             [
                 "C",

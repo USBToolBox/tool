@@ -16,7 +16,7 @@ The USBToolBox tool is a USB mapping tool supporting Windows and macOS. It allow
 
 ### From Windows
 
-Windows 10 or 11 are recommended for the full feature set (companion port binding, port type guessing.). Windows 8 may work, Windows 7 and below will very likely crash.
+Windows 10 or 11 64-bit are recommended for the full feature set (companion port binding, port type guessing.). Windows 8 may work, Windows 7 and below will very likely crash. 32-bit is not supported, macOS needs 64-bit anyway.
 
 Simply download the latest `Windows.exe` from releases. If Windows Defender/other antivirus complains, you can either whitelist the download or use `Windows.zip`, which doesn't have a self extractor (which is what most antiviruses seem to complain about).
 

@@ -118,7 +118,7 @@ class WindowsUSBMap(BaseUSBMap):
                     raise
                 else:
                     shared.debug(e)
-                    time.sleep(0.05 if shared.test_mode else 2)
+                    time.sleep(0.05 if shared.debugging else 2)
 
         controllers = self.usbdump
 

@@ -122,12 +122,13 @@ def time_it(func: Callable, text: str, *args, **kwargs):
     input(f"{text} took {end - start}, press enter to continue".strip())
     return result
 
+debugging = False
 
 def debug(str):
-    if False:
+    if debugging:
         input(f"DEBUG: {str}\nPress enter to continue")
 
-test_mode = False
+test_mode = False and debugging
 if test_mode:
     debug_dump_path = Path(input("Debug dump path: ").strip().replace("'", "").replace('"', ""))
 else:

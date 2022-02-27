@@ -2,9 +2,17 @@ import copy
 import json
 import time
 from enum import Enum
-from pathlib import Path
 
-import wmi  # pylint: disable=import-error
+try:
+    import wmi  # pylint: disable=import-error
+except Exception:  # pylint: disable=broad-except
+    # Dummy WMI
+    class wmi:  # pylint: disable=invalid-name
+        class WMI:
+            @staticmethod
+            def query(*args, **kwargs):  # pylint: disable=unused-argument
+                return []
+
 
 from base import BaseUSBMap
 from Scripts import shared, usbdump

@@ -101,6 +101,7 @@ def get_hub_type(port):
 def get_hub_by_name(name):
     return hub_map.get(name)
 
+
 # TODO: Figure out how to deal with the hub name not matching
 def get_companion_port(port):
     return ([i for i in hub_map.get(port["companion_info"]["hub"], {"ports": []})["ports"] if i["index"] == port["companion_info"]["port"]] or [None])[0]

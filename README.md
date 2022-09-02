@@ -26,9 +26,9 @@ Yes this works lol. Some device names may not be as descriptive but if you reall
 
 ### From macOS
 
-macOS is *not* recommended for several reasons. You won't have features like guessing port types (as there simply isn't enough info for this) as well as binding companion ports (again, no info). However, there's also port limits to deal with, and in macOS 11.3, `XhciPortLimit` is broken, resulting in a lot more hoops to go through.
+macOS is *not* recommended for several reasons. You won't have features like guessing port types (as there simply isn't enough info for this) as well as binding companion ports (again, no info). However, there's also port limits to deal with, and in macOS 11.3, `XhciPortLimit` is broken, resulting in a lot more hoops to go through. If you are forced to use macOS, you should probably use [USBMap](https://github.com/CorpNewt/USBMap) instead, as it has code to handle the port limit.
 
-If you still want to use macOS, download `macOS.zip` from releases.
+If you still want to use USBToolBox on macOS, download `macOS.zip` from releases.
 
 ## Usage
 

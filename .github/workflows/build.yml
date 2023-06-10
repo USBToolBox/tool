@@ -1,7 +1,6 @@
 name: Build
 on:
   push:
-  pull_request:
   workflow_dispatch:
   release:
     types: [published]
@@ -15,12 +14,12 @@ jobs:
       #   run: brew install python3
 
       - name: Install Python Dependencies
-        run: /Library/Frameworks/Python.framework/Versions/3.9/bin/pip3 install -r requirements.txt
+        run: pip3 install -r requirements.txt
 
       - name: Install Debug Dependencies
-        run: /Library/Frameworks/Python.framework/Versions/3.9/bin/pip3 install pyinstaller
+        run: pip3 install pyinstaller
       - name: Build for macOS
-        run: /Library/Frameworks/Python.framework/Versions/3.9/bin/pyinstaller spec/macOS.spec
+        run: pyinstaller spec/macOS.spec
 
       - name: Zip
         run: cd dist; zip macOS.zip macOS

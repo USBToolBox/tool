@@ -197,8 +197,8 @@ functions = [
     ),
     ("IOServiceNameMatching", gen_encoding(CFMutableDictionaryRef, CONST(Encodings.char_ptr))),
     (
-        "IORegistryEntryGetRegistryEntryID", 
-        gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, OUT(POINTER(Encodings.uint64_t)))
+        "IORegistryEntryGetRegistryEntryID",
+        gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, OUT(POINTER(Encodings.uint64_t))),
     ),
     ("IORegistryEntryIDMatching", gen_encoding(CFMutableDictionaryRef, Encodings.uint64_t)),
     ("IORegistryEntryFromPath", gen_encoding(Encodings.io_registry_entry_t, Encodings.mach_port_t, CONST(Encodings.io_string_t_in))),
@@ -284,6 +284,7 @@ def IORegistryEntryGetParentEntry(
 # kern_return_t IOObjectRelease(io_object_t object);
 def IOObjectRelease(object: io_object_t) -> kern_return_t:  # pylint: disable=invalid-name
     raise NotImplementedError
+
 
 # bool_t IOIteratorIsValid(io_iterator_t iterator);
 def IOIteratorIsValid(iterator: io_iterator_t) -> bool:

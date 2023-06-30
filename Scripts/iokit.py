@@ -47,11 +47,15 @@ def CONST(type_: Union[type, bytes]):
 class Encodings:
     id = b"@"
     void = b"v"
+    bool = b"B"
+    unsigned_long = unsigned_long_long = uint64_t = b"Q"
     # For input, we use (const) char* pointers, as we do not need an exactly 128 byte buffer
     char_ptr = b"*"
     io_name_t_in = char_ptr
     # For output, IOKit expects and we provide a 128 byte buffer
     io_name_t_out = b"[128c]"
+    io_string_t_in = char_ptr
+    io_string_t_out = b"[512c]"
 
     kern_return_t = b"i"
     mach_port_t = b"I"
@@ -90,12 +94,12 @@ def STRUCT_POINTER(name: str):
 # CFDictionaryRef = objc_class_factory("CFDictionaryRef", b"^{__CFDictionary=}")
 
 
-class CFTypeRef(ObjCClass):
+class CFTypeRef(ObjCClass, abc.ABC):
     # If we use void pointer, we will get an int back, which corefoundation_to_native will fail on
     encoding = Encodings.id
 
 
-class CFDictionaryRef(CFTypeRef):
+class CFDictionaryRef(CFTypeRef, dict):
     encoding = STRUCT_POINTER("__CFDictionary")
 
 
@@ -130,8 +134,6 @@ class Car:
 
 # https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html
 functions = [
-    # ("IORegistryEntryCreateCFProperties", b"IIo^@II"),
-    # ("IORegistryEntryCreateCFProperties", b"IIo^@" + CFAllocatorRef + b"I"),
     (
         "IORegistryEntryCreateCFProperties",
         gen_encoding(
@@ -182,14 +184,20 @@ functions = [
         "IORegistryEntrySearchCFProperty",
         gen_encoding(CFTypeRef, Encodings.io_registry_entry_t, b"r*", CFStringRef, CFAllocatorRef, Encodings.IOOptionBits),
     ),
-    ("IORegistryEntryGetPath", b"IIr*oI"),
-    ("IORegistryEntryCopyPath", CFStringRef + b"Ir*"),
-    ("IOObjectConformsTo", b"II" + const_io_name_t_ref_in),
-    ("IORegistryEntryGetLocationInPlane", b"II" + const_io_name_t_ref_in + b"o" + io_name_t_ref),
-    ("IOServiceNameMatching", CFDictionaryRef + b"r*"),
-    ("IORegistryEntryGetRegistryEntryID", b"IIo^Q"),
-    ("IORegistryEntryIDMatching", CFDictionaryRef + b"Q"),
-    ("IORegistryEntryFromPath", b"II" + const_io_name_t_ref_in),
+    (
+        "IORegistryEntryGetPath",
+        gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, CONST(Encodings.io_name_t_in), OUT(Encodings.io_string_t_out)),
+    ),
+    ("IORegistryEntryCopyPath", gen_encoding(CFStringRef, Encodings.io_registry_entry_t, CONST(Encodings.io_name_t_in))),
+    ("IOObjectConformsTo", gen_encoding(Encodings.bool, Encodings.io_object_t, CONST(Encodings.io_name_t_in))),
+    (
+        "IORegistryEntryGetLocationInPlane",
+        gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, CONST(Encodings.io_name_t_in), OUT(Encodings.io_name_t_out)),
+    ),
+    ("IOServiceNameMatching", gen_encoding(CFMutableDictionaryRef, CONST(Encodings.char_ptr))),
+    ("IORegistryEntryGetRegistryEntryID", gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, OUT(Encodings.uint64_t))),
+    ("IORegistryEntryIDMatching", gen_encoding(CFMutableDictionaryRef, Encodings.uint64_t)),
+    ("IORegistryEntryFromPath", gen_encoding(Encodings.io_registry_entry_t, Encodings.mach_port_t, CONST(Encodings.io_string_t_in))),
 ]
 
 # TODO: Proper typing
@@ -232,12 +240,12 @@ kIORegistryIterateParents = 2
 
 
 def bind(func):
+    # TODO: Automatically create encodings from the function signature
     print(typing.get_type_hints(func))
     return func
 
 
 # kern_return_t IORegistryEntryCreateCFProperties(io_registry_entry_t entry, CFMutableDictionaryRef * properties, CFAllocatorRef allocator, IOOptionBits options);
-@bind
 def IORegistryEntryCreateCFProperties(
     entry: io_registry_entry_t, properties: pointer, allocator: CFAllocatorRef, options: IOOptionBits
 ) -> tuple[kern_return_t, CFMutableDictionaryRef]:  # pylint: disable=invalid-name
@@ -245,7 +253,8 @@ def IORegistryEntryCreateCFProperties(
 
 
 # CFMutableDictionaryRef IOServiceMatching(const char * name);
-def IOServiceMatching(name: bytes) -> dict:  # pylint: disable=invalid-name
+@bind
+def IOServiceMatching(name: bytes) -> CFMutableDictionaryRef:  # pylint: disable=invalid-name
     raise NotImplementedError
 
 

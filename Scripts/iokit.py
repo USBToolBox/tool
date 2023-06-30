@@ -47,7 +47,7 @@ def CONST(type_: Union[type, bytes]):
 class Encodings:
     id = b"@"
     void = b"v"
-    boolean_t = b"B"
+    bool = b"B"
     unsigned_long = unsigned_long_long = uint64_t = b"Q"
     # For input, we use (const) char* pointers, as we do not need an exactly 128 byte buffer
     char_ptr = b"*"
@@ -160,7 +160,7 @@ functions = [
             OUT(POINTER(Encodings.io_registry_entry_t)),
         ),
     ),
-    ("IOIteratorIsValid", gen_encoding(Encodings.boolean_t, Encodings.io_iterator_t)),
+    ("IOIteratorIsValid", gen_encoding(Encodings.bool, Encodings.io_iterator_t)),
     ("IOObjectRelease", gen_encoding(Encodings.kern_return_t, Encodings.io_object_t)),
     # io_name_t is char[128]
     ("IORegistryEntryGetName", gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, OUT(Encodings.io_name_t_out))),
@@ -190,7 +190,7 @@ functions = [
         gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, CONST(Encodings.io_name_t_in), OUT(Encodings.io_string_t_out)),
     ),
     ("IORegistryEntryCopyPath", gen_encoding(CFStringRef, Encodings.io_registry_entry_t, CONST(Encodings.io_name_t_in))),
-    ("IOObjectConformsTo", gen_encoding(Encodings.boolean_t, Encodings.io_object_t, CONST(Encodings.io_name_t_in))),
+    ("IOObjectConformsTo", gen_encoding(Encodings.bool, Encodings.io_object_t, CONST(Encodings.io_name_t_in))),
     (
         "IORegistryEntryGetLocationInPlane",
         gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, CONST(Encodings.io_name_t_in), OUT(Encodings.io_name_t_out)),
@@ -286,7 +286,7 @@ def IOObjectRelease(object: io_object_t) -> kern_return_t:  # pylint: disable=in
     raise NotImplementedError
 
 # bool_t IOIteratorIsValid(io_iterator_t iterator);
-def IOIteratorIsValid(iterator: io_iterator_t) -> Encodings.boolean_t:
+def IOIteratorIsValid(iterator: io_iterator_t) -> bool:
     raise NotImplementedError
 
 
@@ -368,7 +368,7 @@ def IORegistryEntryCopyPath(entry: io_registry_entry_t, plane: bytes) -> str:  #
 
 
 # boolean_t IOObjectConformsTo(io_object_t object, const io_name_t className)
-def IOObjectConformsTo(object: io_object_t, className: bytes) -> Encodings.boolean_t:  # pylint: disable=invalid-name
+def IOObjectConformsTo(object: io_object_t, className: bytes) -> bool:  # pylint: disable=invalid-name
     raise NotImplementedError
 
 

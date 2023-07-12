@@ -1,5 +1,6 @@
 # pylint: disable=invalid-name
 import enum
+from numbers import Number
 import sys
 from time import time
 from typing import Callable
@@ -33,6 +34,21 @@ class USBDeviceSpeeds(enum.IntEnum):
     def __bool__(self) -> bool:
         return True
 
+    @classmethod
+    def from_speed(cls, speed):
+        if speed == 1.5:
+            return USBDeviceSpeeds.LowSpeed
+        elif speed == 12:
+            return USBDeviceSpeeds.FullSpeed
+        elif speed == 480:
+            return USBDeviceSpeeds.HighSpeed
+        elif speed == 5000:
+            return USBDeviceSpeeds.SuperSpeed
+        elif speed == 10000:
+            return USBDeviceSpeeds.SuperSpeedPlus
+        else:
+            return USBDeviceSpeeds.Unknown
+
 
 class USBPhysicalPortTypes(enum.IntEnum):
     USBTypeA = 0
@@ -56,10 +72,11 @@ class USBPhysicalPortTypes(enum.IntEnum):
 
 
 class USBControllerTypes(enum.IntEnum):
-    UHCI = int("0x00", 16)
-    OHCI = int("0x10", 16)
-    EHCI = int("0x20", 16)
-    XHCI = int("0x30", 16)
+    UHCI = 0x00
+    OHCI = 0x10
+    EHCI = 0x20
+    XHCI = 0x30
+    USB4 = 0x40  # Futureproofing
     Unknown = 9999
 
     def __str__(self) -> str:
@@ -122,11 +139,14 @@ def time_it(func: Callable, text: str, *args, **kwargs):
     input(f"{text} took {end - start}, press enter to continue".strip())
     return result
 
+
 debugging = False
+
 
 def debug(str):
     if debugging:
         input(f"DEBUG: {str}\nPress enter to continue")
+
 
 test_mode = False and debugging
 if test_mode:

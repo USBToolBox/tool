@@ -160,6 +160,7 @@ functions = [
             OUT(POINTER(Encodings.io_registry_entry_t)),
         ),
     ),
+    ("IOIteratorIsValid", gen_encoding(Encodings.bool, Encodings.io_iterator_t)),
     ("IOObjectRelease", gen_encoding(Encodings.kern_return_t, Encodings.io_object_t)),
     # io_name_t is char[128]
     ("IORegistryEntryGetName", gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, OUT(Encodings.io_name_t_out))),
@@ -195,7 +196,10 @@ functions = [
         gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, CONST(Encodings.io_name_t_in), OUT(Encodings.io_name_t_out)),
     ),
     ("IOServiceNameMatching", gen_encoding(CFMutableDictionaryRef, CONST(Encodings.char_ptr))),
-    ("IORegistryEntryGetRegistryEntryID", gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, OUT(Encodings.uint64_t))),
+    (
+        "IORegistryEntryGetRegistryEntryID",
+        gen_encoding(Encodings.kern_return_t, Encodings.io_registry_entry_t, OUT(POINTER(Encodings.uint64_t))),
+    ),
     ("IORegistryEntryIDMatching", gen_encoding(CFMutableDictionaryRef, Encodings.uint64_t)),
     ("IORegistryEntryFromPath", gen_encoding(Encodings.io_registry_entry_t, Encodings.mach_port_t, CONST(Encodings.io_string_t_in))),
 ]
@@ -282,6 +286,11 @@ def IOObjectRelease(object: io_object_t) -> kern_return_t:  # pylint: disable=in
     raise NotImplementedError
 
 
+# bool_t IOIteratorIsValid(io_iterator_t iterator);
+def IOIteratorIsValid(iterator: io_iterator_t) -> bool:
+    raise NotImplementedError
+
+
 # kern_return_t IORegistryEntryGetName(io_registry_entry_t entry, io_name_t name);
 def IORegistryEntryGetName(entry: io_registry_entry_t, name: pointer) -> tuple[kern_return_t, bytes]:  # pylint: disable=invalid-name
     raise NotImplementedError
@@ -359,9 +368,9 @@ def IORegistryEntryCopyPath(entry: io_registry_entry_t, plane: bytes) -> str:  #
     raise NotImplementedError
 
 
-# # boolean_t IOObjectConformsTo(io_object_t object, const io_name_t className)
-# def IOObjectConformsTo(object: io_object_t, className: bytes) -> boolean_t:  # pylint: disable=invalid-name
-#     raise NotImplementedError
+# boolean_t IOObjectConformsTo(io_object_t object, const io_name_t className)
+def IOObjectConformsTo(object: io_object_t, className: bytes) -> bool:  # pylint: disable=invalid-name
+    raise NotImplementedError
 
 
 # kern_return_t IORegistryEntryGetLocationInPlane(io_registry_entry_t entry, const io_name_t plane, io_name_t location)

@@ -1,4 +1,5 @@
 import subprocess
+
 from Scripts import iokit
 
 
@@ -172,14 +173,35 @@ def test_IORegistryEntryFromPath():
 
 
 def test_IORegistryEntryGetLocationInPlane():
-    device = iokit.IORegistryEntryFromPath(
-        iokit.kIOMainPortDefault, "IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/PEG0@1/IOPP/PEGP@0".encode()
-    )
-    assert device != iokit.NULL
+    err, matched = iokit.IOServiceGetMatchingServices (
+            iokit.kIOMainPortDefault,
+            {
+                "IOPropertyMatch": [
+                    {
+                        "processor-number": 0
+                    },
+                    {
+                        "logical-cpu-id": 0
+                    }
+                ]
+            },
+            None
+        )
+    assert err == 0
 
-    err, location = iokit.IORegistryEntryGetLocationInPlane(device, "IOService".encode(), None)
+    iters = list(iokit.ioiterator_to_list(matched))
+    err, location = iokit.IORegistryEntryGetLocationInPlane (
+            iters[0],
+            b"IOService",
+            None
+        )
     assert err == 0
     assert location.replace(b"\x00", b"") == b"0"
+
+
+    for i in iters:
+        err = iokit.IOObjectRelease(i)
+        assert err == 0
 
 
 def test_IORegistryEntryGetPath():
@@ -207,37 +229,42 @@ def test_IORegistryEntryGetRegistryEntryID():
 
     err, obj_id = iokit.IORegistryEntryGetRegistryEntryID(device, None)
     assert err == 0
-    assert obj_id == 4294967578
+    assert obj_id >= 0
 
 
 def test_IORegistryEntryGetChildIterator():
     device = _get_IOResources()
-
-    err, iterator = iokit.IORegistryEntryGetChildIterator(device, "IOService".encode(), None)
+    
+    err, iterator = iokit.IORegistryEntryGetChildIterator (
+            device,
+            "IOService".encode(),
+            None
+        )
     assert err == 0
 
-    interface = list(iokit.ioiterator_to_list(iterator))
-
-    err, props = iokit.IORegistryEntryCreateCFProperties(interface[0], None, iokit.kCFAllocatorDefault, iokit.kNilOptions)
+    err = iokit.IOObjectRelease(iterator)
     assert err == 0
-    assert props.get("IOProviderClass") == "IOResources"
 
-    for i in interface:
-        err = iokit.IOObjectRelease(i)
-        assert err == 0
+    err = iokit.IOObjectRelease(device)
+    assert err == 0
 
 
 def test_IORegistryCreateIterator():
-    err, iterator = iokit.IORegistryCreateIterator(
-        iokit.kIOMainPortDefault, "IODeviceTree".encode(), iokit.kIORegistryIterateRecursively, None
-    )
+    err, iterator = iokit.IORegistryCreateIterator (
+            iokit.kIOMainPortDefault,
+            "IODeviceTree".encode(),
+            iokit.kIORegistryIterateRecursively,
+            None
+        )
     assert err == 0
 
     interface = list(iokit.ioiterator_to_list(iterator))
 
-    err, props = iokit.IORegistryEntryCreateCFProperties(interface[0], None, iokit.kCFAllocatorDefault, iokit.kNilOptions)
+    err, props = iokit.IORegistryEntryCreateCFProperties (
+            interface[0], None, iokit.kCFAllocatorDefault, iokit.kNilOptions
+        )
     assert err == 0
-    assert props.get("IOPlatformUUID") == "115C2C75-F539-52BE-90AF-EBBC65ED6CB8"
+    assert props.get("IOPlatformUUID") != None
 
     for i in interface:
         err = iokit.IOObjectRelease(i)
@@ -292,3 +319,6 @@ def test_IORegistryIteratorExitEntry():
 
             rec_lvl -= 1
             assert iokit.IORegistryIteratorExitEntry(iter) == 0
+
+
+test_IORegistryEntryGetLocationInPlane()

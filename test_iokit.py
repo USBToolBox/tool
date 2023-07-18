@@ -320,5 +320,3 @@ def test_IORegistryIteratorExitEntry():
             rec_lvl -= 1
             assert iokit.IORegistryIteratorExitEntry(iter) == 0
 
-
-test_IORegistryEntryGetLocationInPlane()

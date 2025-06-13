@@ -30,12 +30,13 @@ jobs:
           path: dist/macOS.zip
       - name: Upload to Release
         if: github.event_name == 'release'
-        uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/macOS.zip
-          tag: ${{ github.ref }}
-          file_glob: true
+          files: dist/macOS.zip
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   windows:
     name: Build Windows
@@ -77,9 +78,12 @@ jobs:
             dist/*.zip
       - name: Upload to Release
         if: github.event_name == 'release'
-        uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/*.*
-          tag: ${{ github.ref }}
-          file_glob: true
+          files: |
+            dist/*.exe
+            dist/*.zip
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

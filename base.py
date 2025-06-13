@@ -608,6 +608,8 @@ class BaseUSBMap:
                 personality["IOProviderMergeProperties"]["ports"][port_name] = {
                     "port": binascii.a2b_hex(hexswap(hex(port["index"])[2:].zfill(8))),
                     "UsbConnector": port["type"] or port["guessed"],
+                    "usb-port-number": binascii.a2b_hex(hexswap(hex(port["index"])[2:].zfill(8))),
+                    "usb-port-type": port["type"] or port["guessed"],
                 }
 
                 if self.settings["add_comments_to_map"] and port["comment"]:

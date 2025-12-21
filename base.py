@@ -250,7 +250,8 @@ class BaseUSBMap:
         if self.controllers_historical or self.controllers_historical == []:
             self.controllers = None
             self.controllers_historical = None
-            self.json_path.unlink()
+            if self.json_path.exists():
+                self.json_path.unlink()
 
     def dump_settings(self):
         json.dump(self.settings, self.settings_path.open("w"), indent=4, sort_keys=True)

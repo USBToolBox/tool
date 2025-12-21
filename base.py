@@ -629,7 +629,8 @@ class BaseUSBMap:
         else:
             output_kext = "UTBMap.kext"
 
-        write_path = shared.current_dir / Path(output_kext)
+        # Save kext to current working directory (where user ran the command)
+        write_path = Path.cwd() / Path(output_kext)
 
         if write_path.exists():
             print("Removing existing kext...")
@@ -638,7 +639,10 @@ class BaseUSBMap:
         print("Writing kext and Info.plist...")
         (write_path / Path("Contents")).mkdir(parents=True)
         plistlib.dump(template, (write_path / Path("Contents/Info.plist")).open("wb"), sort_keys=True)
-        print(f"Done. Saved to {write_path.resolve()}.\n")
+        print(f"\n{'='*60}")
+        print(f"SUCCESS! Kext created successfully.")
+        print(f"Location: {write_path.resolve()}")
+        print(f"{'='*60}\n")
         menu.print_options()
 
         menu.select()

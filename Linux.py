@@ -244,13 +244,26 @@ class LinuxUSBMap(BaseUSBMap):
             # Build port list
             ports = []
             for port_num in range(1, num_ports + 1):
+                # Guess connector type based on port class
+                # Since Linux doesn't expose detailed connector info, we use reasonable defaults
+                guessed_type = None
+                if default_port_class == shared.USBDeviceSpeeds.SuperSpeed:
+                    # USB 3.0 ports - most commonly USB 3 Type A
+                    guessed_type = shared.USBPhysicalPortTypes.USB3TypeA
+                elif default_port_class == shared.USBDeviceSpeeds.HighSpeed:
+                    # USB 2.0 ports - most commonly USB Type A
+                    guessed_type = shared.USBPhysicalPortTypes.USBTypeA
+                elif default_port_class == shared.USBDeviceSpeeds.FullSpeed:
+                    # USB 1.1 ports - most commonly USB Type A
+                    guessed_type = shared.USBPhysicalPortTypes.USBTypeA
+                
                 port = {
                     "name": f"Port {port_num}",
                     "comment": None,
                     "index": port_num,
                     "class": default_port_class,
                     "type": None,
-                    "guessed": None,
+                    "guessed": guessed_type,
                     "devices": []
                 }
                 ports.append(port)

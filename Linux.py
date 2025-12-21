@@ -291,9 +291,10 @@ class LinuxUSBMap(BaseUSBMap):
                         "devices": []
                     }
                     
-                    # Update port class based on device speed
-                    if port["class"] == shared.USBDeviceSpeeds.Unknown or device_info["speed"] > port["class"]:
-                        port["class"] = device_info["speed"]
+                    # Update port class based on device speed (skip Unknown values)
+                    if device_info["speed"] != shared.USBDeviceSpeeds.Unknown:
+                        if port["class"] == shared.USBDeviceSpeeds.Unknown or device_info["speed"] > port["class"]:
+                            port["class"] = device_info["speed"]
                     
                     # Check if device already exists in port (avoid duplicates)
                     existing_device_names = [d.get("name") for d in port["devices"] if isinstance(d, dict)]

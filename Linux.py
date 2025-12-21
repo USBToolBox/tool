@@ -22,6 +22,22 @@ class LinuxUSBMap(BaseUSBMap):
             return None
 
     @staticmethod
+    def get_port_class_from_controller(controller_class):
+        """Determine default port class based on controller type."""
+        # For EHCI controllers, all ports are USB 2.0 (HighSpeed)
+        if controller_class == shared.USBControllerTypes.EHCI:
+            return shared.USBDeviceSpeeds.HighSpeed
+        # For OHCI/UHCI controllers, all ports are USB 1.1 (FullSpeed)
+        elif controller_class in [shared.USBControllerTypes.OHCI, shared.USBControllerTypes.UHCI]:
+            return shared.USBDeviceSpeeds.FullSpeed
+        # For XHCI controllers, ports can be USB 2.0 or USB 3.0
+        # We'll default to SuperSpeed and let device detection refine this
+        elif controller_class == shared.USBControllerTypes.XHCI:
+            return shared.USBDeviceSpeeds.SuperSpeed
+        else:
+            return shared.USBDeviceSpeeds.Unknown
+
+    @staticmethod
     def get_controller_type_from_class(class_code):
         """Determine USB controller type from PCI class code."""
         # USB controller class codes:
@@ -205,6 +221,34 @@ class LinuxUSBMap(BaseUSBMap):
             except ValueError:
                 num_ports = 0
             
+            # Get USB version from root hub to determine port capabilities
+            version = self.read_sysfs_file(real_path / "version")
+            speed = self.read_sysfs_file(real_path / "speed")
+            
+            # Determine port class based on root hub version
+            # XHCI controllers create separate USB 2.0 and USB 3.0 root hubs
+            default_port_class = shared.USBDeviceSpeeds.Unknown
+            if version:
+                if version.startswith("3."):
+                    # USB 3.x root hub - ports are SuperSpeed capable
+                    default_port_class = shared.USBDeviceSpeeds.SuperSpeed
+                elif version.startswith("2."):
+                    # USB 2.x root hub - ports are HighSpeed capable
+                    default_port_class = shared.USBDeviceSpeeds.HighSpeed
+                elif version.startswith("1."):
+                    # USB 1.x root hub - ports are FullSpeed capable
+                    default_port_class = shared.USBDeviceSpeeds.FullSpeed
+            
+            # Fall back to controller type if version not available
+            if default_port_class == shared.USBDeviceSpeeds.Unknown:
+                if controller_class == shared.USBControllerTypes.EHCI:
+                    default_port_class = shared.USBDeviceSpeeds.HighSpeed
+                elif controller_class in [shared.USBControllerTypes.OHCI, shared.USBControllerTypes.UHCI]:
+                    default_port_class = shared.USBDeviceSpeeds.FullSpeed
+                elif controller_class == shared.USBControllerTypes.XHCI:
+                    # For XHCI without version info, default to HighSpeed (USB 2.0)
+                    default_port_class = shared.USBDeviceSpeeds.HighSpeed
+            
             # Build port list
             ports = []
             for port_num in range(1, num_ports + 1):
@@ -212,7 +256,7 @@ class LinuxUSBMap(BaseUSBMap):
                     "name": f"Port {port_num}",
                     "comment": None,
                     "index": port_num,
-                    "class": shared.USBDeviceSpeeds.Unknown,
+                    "class": default_port_class,
                     "type": None,
                     "guessed": None,
                     "devices": []

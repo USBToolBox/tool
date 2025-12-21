@@ -2,11 +2,11 @@
 
 *Making USB mapping simple(r)*
 
-The USBToolBox tool is a USB mapping tool supporting Windows and macOS. It allows for building a custom injector kext from Windows and macOS.
+The USBToolBox tool is a USB mapping tool supporting Windows, macOS, and Linux. It allows for building a custom injector kext from Windows, macOS, and Linux.
 
 ## Features
 
-* Supports mapping from Windows and macOS
+* Supports mapping from Windows, macOS, and Linux
 * Can build a map using either the USBToolBox kext or native Apple kexts (AppleUSBHostMergeProperties)
 * Supports multiple ways of matching
 * Supports companion ports (on Windows)
@@ -30,6 +30,17 @@ macOS is *not* recommended for several reasons. You won't have features like gue
 
 If you still want to use USBToolBox on macOS, download `macOS.zip` from releases.
 
+### From Linux
+
+Linux support is now available! Like macOS, Linux won't have features like guessing port types or binding companion ports, but it provides a working solution for USB mapping from Linux.
+
+To use USBToolBox on Linux:
+1. Install Python 3 and pip if not already installed
+2. Install required dependencies: `pip3 install -r requirements.txt`
+3. Run the tool: `python3 Linux.py`
+
+**Note:** The tool needs to read USB device information from `/sys/bus/usb/devices`, which should be available on most modern Linux systems.
+
 ## Usage
 
 This is gonna be a very basic guide for now. A fully-fleshed guide will be released in the future.
@@ -38,7 +49,7 @@ This is gonna be a very basic guide for now. A fully-fleshed guide will be relea
 2. Open and adjust settings if necessary.
 3. Select Discover Ports and wait for the listing to populate.
 4. Plug in a USB device into each port. Wait for the listing to show your USB device before unplugging it and plugging it into another port.
-    * If on Windows, you only need to plug in 1 device to USB 3 ports (as companion detection should be working). If on macOS, you will have to plug in a USB 2 device and a USB 3 device into each USB 3 port.
+    * If on Windows, you only need to plug in 1 device to USB 3 ports (as companion detection should be working). If on macOS or Linux, you will have to plug in a USB 2 device and a USB 3 device into each USB 3 port.
     * For old computers with OHCI/UHCI and EHCI controllers, you will need to plug in a mouse/keyboard to map the USB 1.1 personalities, as most USB 2 devices will end on the USB 2 personality.
 5. Once mapping is done, go to the Select Ports screen.
 6. Select your ports and adjust port types as neccesary.

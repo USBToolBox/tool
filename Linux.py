@@ -246,7 +246,6 @@ class LinuxUSBMap(BaseUSBMap):
             for port_num in range(1, num_ports + 1):
                 # Guess connector type based on port class
                 # Since Linux doesn't expose detailed connector info, we use reasonable defaults
-                guessed_type = None
                 if default_port_class == shared.USBDeviceSpeeds.SuperSpeed:
                     # USB 3.0 ports - most commonly USB 3 Type A
                     guessed_type = shared.USBPhysicalPortTypes.USB3TypeA
@@ -255,6 +254,9 @@ class LinuxUSBMap(BaseUSBMap):
                     guessed_type = shared.USBPhysicalPortTypes.USBTypeA
                 elif default_port_class == shared.USBDeviceSpeeds.FullSpeed:
                     # USB 1.1 ports - most commonly USB Type A
+                    guessed_type = shared.USBPhysicalPortTypes.USBTypeA
+                else:
+                    # Unknown or other speeds - default to USB Type A as most conservative guess
                     guessed_type = shared.USBPhysicalPortTypes.USBTypeA
                 
                 port = {

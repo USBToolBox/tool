@@ -2,15 +2,16 @@
 
 *Making USB mapping simple(r)*
 
-The USBToolBox tool is a USB mapping tool supporting Windows and macOS. It allows for building a custom injector kext from Windows and macOS.
+The USBToolBox tool is a USB mapping tool supporting Windows, macOS, and Linux. It allows for building a custom injector kext from Windows and macOS, with Linux support for USB topology preparation.
 
 ## Features
 
-* Supports mapping from Windows and macOS
+* Supports mapping from Windows, macOS, and Linux (preparation mode)
 * Can build a map using either the USBToolBox kext or native Apple kexts (AppleUSBHostMergeProperties)
 * Supports multiple ways of matching
 * Supports companion ports (on Windows)
 * Make educated guesses for port types (on Windows)
+* Generate USB blueprints for macOS import (on Linux)
 
 ## Supported Methods
 
@@ -29,6 +30,38 @@ Yes this works lol. Some device names may not be as descriptive but if you reall
 macOS is *not* recommended for several reasons. You won't have features like guessing port types (as there simply isn't enough info for this) as well as binding companion ports (again, no info). However, there's also port limits to deal with, and in macOS 11.3, `XhciPortLimit` is broken, resulting in a lot more hoops to go through. If you are forced to use macOS, you should probably use [USBMap](https://github.com/CorpNewt/USBMap) instead, as it has code to handle the port limit.
 
 If you still want to use USBToolBox on macOS, download `macOS.zip` from releases.
+
+### From Linux (Preparation Mode)
+
+Linux support allows you to **prepare** your USB mapping before installing macOS. This is useful for:
+
+* Documenting your USB topology before macOS installation
+* Identifying internal devices (Bluetooth, webcam, fingerprint readers)
+* Generating a blueprint to import into macOS later
+
+**Requirements:** Python 3.6+, `lspci` (pciutils), `lsusb` (usbutils)
+
+**Usage:**
+
+```bash
+python3 Linux.py
+```
+
+**Features:**
+
+* Detects XHCI/EHCI controllers via lspci
+* Enumerates USB devices and port topology
+* Generates JSON blueprint for macOS import
+* Provides OpenCore configuration guidance
+
+**Limitations:**
+
+* ⚠️ **Preparation only** - Cannot build final kext (must be done in macOS)
+* Cannot detect physical connector types (Type-A vs Type-C)
+* No live plug/unplug detection (snapshot-based)
+* Devices through hubs shown separately
+
+After generating your blueprint, see `docs/linux_to_macos_handoff.md` for instructions on finalizing your USB map in macOS using Hackintool.
 
 ## Usage
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from Scripts._build import BUILD
 
-VERSION = "0.2"
+VERSION = "0.3.1"
 
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     current_dir = Path(sys.executable).parent

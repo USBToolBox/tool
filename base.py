@@ -532,14 +532,25 @@ class BaseUSBMap:
                 ]["_items"][0]["machine_model"]
             else:
                 model_menu = utils.TUIOnlyPrint(
-                    "Enter Model Identifier",
-                    "Enter the model identifier: ",
+                    "Enter Model Identifier or config.plist",
+                    "Enter the model identifier or drag config.plist here: ",
                     [
                         "You are seeing this as you have selected to use native classes. Model identifier autodetection is unavailable as you are not on macOS.",
-                        "Please enter the model identifier of the target system below. You can find it in System Information or with 'system_profiler -detailLevel mini SPHardwareDataType'.",
+                        "Please enter the model identifier of the target system, or drag your config.plist here to auto-detect it.",
                     ],
                 ).start()
-                model_identifier = model_menu.strip()
+                user_input = model_menu.strip().strip('"').strip("'")
+                
+                if Path(user_input).is_file() and user_input.lower().endswith(".plist"):
+                    try:
+                        plist_data = plistlib.load(open(user_input, "rb"))
+                        model_identifier = plist_data.get("PlatformInfo", {}).get("Generic", {}).get("SystemProductName", "")
+                        if not model_identifier:
+                            model_identifier = input("SystemProductName not found. Enter manually: ").strip()
+                    except Exception:
+                        model_identifier = input("Failed to parse config.plist. Enter manually: ").strip()
+                else:
+                    model_identifier = user_input
 
         ignore = response == "I"
 
@@ -607,7 +618,9 @@ class BaseUSBMap:
 
                 personality["IOProviderMergeProperties"]["ports"][port_name] = {
                     "port": binascii.a2b_hex(hexswap(hex(port["index"])[2:].zfill(8))),
+                    "usb-port-number": binascii.a2b_hex(hexswap(hex(port["index"])[2:].zfill(8))),
                     "UsbConnector": port["type"] or port["guessed"],
+                    "usb-port-type": port["type"] or port["guessed"],
                 }
 
                 if self.settings["add_comments_to_map"] and port["comment"]:

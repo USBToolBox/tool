@@ -218,6 +218,12 @@ def get_controllers():
             # This is useless
             continue
 
+        # Ghost root hubs reported by the Windows USB stack (e.g. ROOT\USB\0000) have a zero
+        # vendor and product ID, and therefore no pci_id, acpi_path or bdf. Keeping them makes
+        # BaseUSBMap.choose_matching_key() run out of identifiers when the kext is built.
+        if controller["VendorID"] in [0, int("0xFFFF", 16)] and controller["DeviceID"] in [0, int("0xFFFF", 16)]:
+            continue
+
         # root
         controller_info = {
             "name": controller["UsbDeviceProperties"]["DeviceDesc"],

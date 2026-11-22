@@ -239,7 +239,7 @@ def get_controllers():
             controller_info["identifiers"]["pci_id"] = [hex(controller[i])[2:] for i in ["VendorID", "DeviceID"]]
 
         if controller["SubSysID"] not in [0, int("0xFFFFFFFF", 16)]:
-            controller_info["identifiers"]["pci_id"] += [hex(controller["SubSysID"])[2:6], hex(controller["SubSysID"])[6:]]
+            controller_info["identifiers"].setdefault("pci_id", []).extend([hex(controller["SubSysID"])[2:6], hex(controller["SubSysID"])[6:]])
 
         if (controller.get("ControllerInfo") or {}).get("PciRevision", 0) not in [0, int("0xFF", 16)]:
             controller_info["identifiers"]["pci_revision"] = int(controller["ControllerInfo"]["PciRevision"])

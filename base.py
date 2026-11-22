@@ -505,7 +505,9 @@ class BaseUSBMap:
             return {"IOPCIPrimaryMatch": f"0x{pci_id[1]}{pci_id[0]}"} | ({"IOPCISecondaryMatch": f"0x{pci_id[3]}{pci_id[2]}"} if len(pci_id) > 2 else {})
 
         else:
-            raise RuntimeError("No matching key available")
+            # No identifier is unique, so fall back to matching on the controller's instance
+            # ID instead of aborting the whole build.
+            return {"IOPropertyMatch": {"USB Host Controller": controller["identifiers"]["instance_id"]}}
 
     def build_kext(self):
         empty_controllers = [c for c in self.controllers_historical if not any(p["selected"] for p in c["ports"])]
